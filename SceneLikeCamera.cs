@@ -1,18 +1,20 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class SceneLikeCamera : MonoBehaviour
 {
-    [Header("Movement")]
-    [SerializeField] private float moveSpeed = 1.0f;
-    [SerializeField] private float rotationSpeed = 5.0f;
-    [SerializeField] private float zoomSpeed = 5.0f;
-
     [Header("Focus Object")]
+    [SerializeField, Tooltip("Double click to focus on objects with colliders?")]
+    private bool doubleClickFocus = false;
     [SerializeField] private float focusLimit = 100f;
     [SerializeField] private float minFocusDistance = 5.0f;
-    [SerializeField, Tooltip("Time in which a double click will be registered, reduce to require faster double clicks")] 
+    [SerializeField, Tooltip("Time in which a double click will be registered, reduce to require faster double clicks")]
     private float doubleClickTime = .25f;
     private float cooldown = 0;
+
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = .5f;
+    [SerializeField] private float rotationSpeed = 4.0f;
+    [SerializeField] private float zoomSpeed = 5.0f;    
 
     [Header("Move Keys")]
     [SerializeField] private KeyCode forwardKey = KeyCode.W;
@@ -26,6 +28,9 @@ public class SceneLikeCamera : MonoBehaviour
 
     void Update()
     {
+        if (!doubleClickFocus)
+            return;
+
         //Double click for focus 
         if (cooldown > 0 && Input.GetKeyDown(KeyCode.Mouse0))
             FocusObject();
@@ -52,16 +57,16 @@ public class SceneLikeCamera : MonoBehaviour
         float mouseMoveX = Input.GetAxis("Mouse X");
 
         //Move the camera when anchored
-        if (Input.GetKey(anchoredMoveKey)) 
+        if (Input.GetKey(anchoredMoveKey))
         {
-            move += Vector3.up * mouseMoveY * -moveSpeed;
+            move += Vector3.up * mouseMoveY * moveSpeed;
             move += Vector3.right * mouseMoveX * -moveSpeed;
         }
 
         //Rotate the camera when anchored
-        if (Input.GetKey(anchoredRotateKey)) 
+        if (Input.GetKey(anchoredRotateKey))
         {
-            transform.RotateAround(transform.position, transform.right, mouseMoveY * -rotationSpeed);
+            transform.RotateAround(transform.position, transform.right, mouseMoveY * rotationSpeed);
             transform.RotateAround(transform.position, Vector3.up, mouseMoveX * rotationSpeed);
         }
 
