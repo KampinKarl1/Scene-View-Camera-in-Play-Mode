@@ -59,14 +59,14 @@ public class SceneLikeCamera : MonoBehaviour
         //Move the camera when anchored
         if (Input.GetKey(anchoredMoveKey))
         {
-            move += Vector3.up * mouseMoveY * moveSpeed;
-            move += Vector3.right * mouseMoveX * -moveSpeed;
+            move += Vector3.up * -mouseMoveY * moveSpeed;
+            move += Vector3.right * -mouseMoveX * moveSpeed;
         }
 
         //Rotate the camera when anchored
         if (Input.GetKey(anchoredRotateKey))
         {
-            transform.RotateAround(transform.position, transform.right, mouseMoveY * rotationSpeed);
+            transform.RotateAround(transform.position, transform.right, -mouseMoveY * rotationSpeed);
             transform.RotateAround(transform.position, Vector3.up, mouseMoveX * rotationSpeed);
         }
 
