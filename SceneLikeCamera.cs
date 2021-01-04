@@ -1,20 +1,32 @@
 using UnityEngine;
 
+
 public class SceneLikeCamera : MonoBehaviour
 {
     [Header("Focus Object")]
-    [SerializeField, Tooltip("Double click to focus on objects with colliders?")]
-    private bool doubleClickFocus = false;
+    [SerializeField, Tooltip ("Enable double-click to focus on objects?")] 
+    private bool doFocus = false;
     [SerializeField] private float focusLimit = 100f;
     [SerializeField] private float minFocusDistance = 5.0f;
-    [SerializeField, Tooltip("Time in which a double click will be registered, reduce to require faster double clicks")]
-    private float doubleClickTime = .25f;
+    private float doubleClickTime = .15f;
     private float cooldown = 0;
+    [Header("Undo - Only undoes the Focus Object - The keys must be pressed in order.")]
+    [SerializeField] private KeyCode firstUndoKey = KeyCode.LeftControl;
+    [SerializeField] private KeyCode secondUndoKey = KeyCode.Z;
 
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = .5f;
-    [SerializeField] private float rotationSpeed = 4.0f;
-    [SerializeField] private float zoomSpeed = 5.0f;    
+    [SerializeField] private float moveSpeed = 1.0f;
+    [SerializeField] private float rotationSpeed = 10.0f;
+    [SerializeField] private float zoomSpeed = 10.0f;
+
+    //Cache last pos and rot be able to undo last focus object action.
+    Quaternion prevRot = new Quaternion();
+    Vector3 prevPos = new Vector3();
+
+    [Header("Axes Names")]
+    [SerializeField, Tooltip("Otherwise known as the vertical axis")] private string mouseY = "Mouse Y";
+    [SerializeField, Tooltip("AKA horizontal axis")] private string mouseX = "Mouse X";
+    [SerializeField, Tooltip("The axis you want to use for zoom.")] private string zoomAxis = "Mouse ScrollWheel";
 
     [Header("Move Keys")]
     [SerializeField] private KeyCode forwardKey = KeyCode.W;
@@ -22,13 +34,22 @@ public class SceneLikeCamera : MonoBehaviour
     [SerializeField] private KeyCode leftKey = KeyCode.A;
     [SerializeField] private KeyCode rightKey = KeyCode.D;
 
+    [Header("Flat Move"), Tooltip("Instead of going where the camera is pointed, the camera moves only on X and Z axes.")]
+    [SerializeField] private KeyCode flatMoveKey = KeyCode.LeftShift;
+
+    [Header("Anchored Movement"), Tooltip("By default in scene-view, this is done by right-clicking for rotation or middle mouse clicking for up and down")]
     [SerializeField] private KeyCode anchoredMoveKey = KeyCode.Mouse2;
 
     [SerializeField] private KeyCode anchoredRotateKey = KeyCode.Mouse1;
 
+    private void Start()
+    {
+        SavePosAndRot();
+    }
+
     void Update()
     {
-        if (!doubleClickFocus)
+        if (!doFocus)
             return;
 
         //Double click for focus 
@@ -37,6 +58,13 @@ public class SceneLikeCamera : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Mouse0))
             cooldown = doubleClickTime;
 
+        //--------UNDO FOCUS---------
+        if (Input.GetKey(firstUndoKey)) 
+        {
+            if (Input.GetKeyDown(secondUndoKey))
+                GoBackToLastPosition();
+        }
+
         cooldown -= Time.deltaTime;
     }
 
@@ -44,6 +72,8 @@ public class SceneLikeCamera : MonoBehaviour
     {
         Vector3 move = Vector3.zero;
 
+        //Move and rotate the camera
+    
         if (Input.GetKey(forwardKey))
             move += Vector3.forward * moveSpeed;
         if (Input.GetKey(backKey))
@@ -53,20 +83,31 @@ public class SceneLikeCamera : MonoBehaviour
         if (Input.GetKey(rightKey))
             move += Vector3.right * moveSpeed;
 
-        float mouseMoveY = Input.GetAxis("Mouse Y");
-        float mouseMoveX = Input.GetAxis("Mouse X");
+        //By far the simplest solution I could come up with for moving only on the Horizontal plane - no rotation, just cache y
+        if (Input.GetKey(flatMoveKey))
+        {
+            float origY = transform.position.y;
+
+            transform.Translate(move);
+            transform.position = new Vector3(transform.position.x, origY, transform.position.z);
+
+            return;
+        }
+
+        float mouseMoveY = Input.GetAxis(mouseY);
+        float mouseMoveX = Input.GetAxis(mouseX);
 
         //Move the camera when anchored
-        if (Input.GetKey(anchoredMoveKey))
+        if (Input.GetKey(anchoredMoveKey)) 
         {
-            move += Vector3.up * -mouseMoveY * moveSpeed;
-            move += Vector3.right * -mouseMoveX * moveSpeed;
+            move += Vector3.up * mouseMoveY * -moveSpeed;
+            move += Vector3.right * mouseMoveX * -moveSpeed;
         }
 
         //Rotate the camera when anchored
-        if (Input.GetKey(anchoredRotateKey))
+        if (Input.GetKey(anchoredRotateKey)) 
         {
-            transform.RotateAround(transform.position, transform.right, -mouseMoveY * rotationSpeed);
+            transform.RotateAround(transform.position, transform.right, mouseMoveY * -rotationSpeed);
             transform.RotateAround(transform.position, Vector3.up, mouseMoveX * rotationSpeed);
         }
 
@@ -76,12 +117,15 @@ public class SceneLikeCamera : MonoBehaviour
     private void LateUpdate()
     {
         //Scroll to zoom
-        float mouseScroll = Input.GetAxis("Mouse ScrollWheel");
+        float mouseScroll = Input.GetAxis(zoomAxis);
         transform.Translate(Vector3.forward * mouseScroll * zoomSpeed);
     }
 
     private void FocusObject()
     {
+        //To be able to undo
+        SavePosAndRot();
+
         //If we double-clicked an object in the scene, go to its position
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -96,6 +140,18 @@ public class SceneLikeCamera : MonoBehaviour
 
             transform.LookAt(target.transform);
         }
+    }
+
+    private void SavePosAndRot() 
+    {
+        prevRot = transform.rotation;
+        prevPos = transform.position;
+    }
+
+    private void GoBackToLastPosition() 
+    {
+        transform.position = prevPos;
+        transform.rotation = prevRot;
     }
 
     private Vector3 GetOffset(Vector3 targetPos, Vector3 targetSize)
