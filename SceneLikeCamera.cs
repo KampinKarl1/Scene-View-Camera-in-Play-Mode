@@ -34,7 +34,7 @@ public class SceneLikeCamera : MonoBehaviour
     [SerializeField] private KeyCode leftKey = KeyCode.A;
     [SerializeField] private KeyCode rightKey = KeyCode.D;
 
-    [Header("Flat Move"), Tooltip("Instead of going where the camera is pointed, the camera moves only on X and Z axes.")]
+    [Header("Flat Move"), Tooltip("Instead of going where the camera is pointed, the camera moves only on the horizontal plane (Assuming you are working in 3D with default preferences).")]
     [SerializeField] private KeyCode flatMoveKey = KeyCode.LeftShift;
 
     [Header("Anchored Movement"), Tooltip("By default in scene-view, this is done by right-clicking for rotation or middle mouse clicking for up and down")]
