@@ -68,10 +68,10 @@ public class SceneLikeCamera : MonoBehaviour
         cooldown -= Time.deltaTime;
     }
 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
         Vector3 move = Vector3.zero;
-
+        
         //Move and rotate the camera
     
         if (Input.GetKey(forwardKey))
@@ -112,10 +112,7 @@ public class SceneLikeCamera : MonoBehaviour
         }
 
         transform.Translate(move);
-    }
-
-    private void LateUpdate()
-    {
+        
         //Scroll to zoom
         float mouseScroll = Input.GetAxis(zoomAxis);
         transform.Translate(Vector3.forward * mouseScroll * zoomSpeed);
