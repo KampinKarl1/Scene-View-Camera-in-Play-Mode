@@ -15,7 +15,7 @@ public class SceneLikeCamera : MonoBehaviour
     [SerializeField] private KeyCode secondUndoKey = KeyCode.Z;
 
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 1.0f;
+    [SerializeField] private float moveSpeed = 0.1f;
     [SerializeField] private float rotationSpeed = 10.0f;
     [SerializeField] private float zoomSpeed = 10.0f;
 
@@ -161,3 +161,4 @@ public class SceneLikeCamera : MonoBehaviour
         return -dirToTarget.normalized * focusDistance;
     }
 }
+
